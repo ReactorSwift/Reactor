@@ -2,7 +2,7 @@ import Foundation
 
 public protocol Event {}
 
-public protocol State {
+public protocol StateType {
     mutating func handle(event: Event)
 }
 
@@ -23,7 +23,7 @@ extension Middleware {
     }
 }
 
-public struct Middlewares<S: State> {
+public struct Middlewares<State: StateType> {
     private(set) var middleware: AnyMiddleware
 }
 
@@ -44,13 +44,13 @@ extension Subscriber {
     }
 }
 
-public struct Subscription<S: State> {
+public struct Subscription<State: StateType> {
     private(set) weak var subscriber: AnySubscriber? = nil
-    let selector: ((S) -> Any)?
+    let selector: ((State) -> Any)?
 }
 
 
-public class Reactor<S: State> {
+public class Reactor<State: StateType> {
     
     /**
      An `EventEmitter` is a function that takes the state and a reference
@@ -58,17 +58,17 @@ public class Reactor<S: State> {
      executed. An `EventEmitter` may also use its reactor reference to perform
      events at a later time, for example an async callback.
      */
-    public typealias EventEmitter = (S, Reactor<S>) -> Event?
+    public typealias EventEmitter = (State, Reactor<State>) -> Event?
     
     // MARK: - Properties
     
-    private var subscriptions = [Subscription<S>]()
-    private var middlewares = [Middlewares<S>]()
+    private var subscriptions = [Subscription<State>]()
+    private var middlewares = [Middlewares<State>]()
     
     
     // MARK: - State
     
-    private (set) var state: S {
+    private (set) var state: State {
         didSet {
             subscriptions = subscriptions.filter { $0.subscriber != nil }
             DispatchQueue.main.async {
@@ -79,7 +79,7 @@ public class Reactor<S: State> {
         }
     }
     
-    public init(state: S, middlewares: [AnyMiddleware] = []) {
+    public init(state: State, middlewares: [AnyMiddleware] = []) {
         self.state = state
         self.middlewares = middlewares.map(Middlewares.init)
     }
@@ -87,7 +87,7 @@ public class Reactor<S: State> {
     
     // MARK: - Subscriptions
     
-    public func add(subscriber: AnySubscriber, selector: ((S) -> Any)? = nil) {
+    public func add(subscriber: AnySubscriber, selector: ((State) -> Any)? = nil) {
         guard !subscriptions.contains(where: {$0.subscriber === subscriber}) else { return }
         subscriptions.append(Subscription(subscriber: subscriber, selector: selector))
         subscriber._update(with: state)
