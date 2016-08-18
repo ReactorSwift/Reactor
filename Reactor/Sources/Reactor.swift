@@ -44,13 +44,13 @@ extension Subscriber {
     }
 }
 
-struct Subscription<S: State> {
+public struct Subscription<S: State> {
     private(set) weak var subscriber: AnySubscriber? = nil
     let selector: ((S) -> Any)?
 }
 
 
-class Reactor<S: State> {
+public class Reactor<S: State> {
     
     /**
      An `EventEmitter` is a function that takes the state and a reference
@@ -79,7 +79,7 @@ class Reactor<S: State> {
         }
     }
     
-    init(state: S, middlewares: [AnyMiddleware] = []) {
+    public init(state: S, middlewares: [AnyMiddleware] = []) {
         self.state = state
         self.middlewares = middlewares.map(Middlewares.init)
     }
@@ -87,24 +87,24 @@ class Reactor<S: State> {
     
     // MARK: - Subscriptions
     
-    func add(subscriber: AnySubscriber, selector: ((S) -> Any)? = nil) {
+    public func add(subscriber: AnySubscriber, selector: ((S) -> Any)? = nil) {
         guard !subscriptions.contains(where: {$0.subscriber === subscriber}) else { return }
         subscriptions.append(Subscription(subscriber: subscriber, selector: selector))
         subscriber._update(with: state)
     }
     
-    func remove(subscriber: AnySubscriber) {
+    public func remove(subscriber: AnySubscriber) {
         subscriptions = subscriptions.filter { $0.subscriber !== subscriber }
     }
     
     // MARK: - Events
     
-    func perform(event: Event) {
+    public func perform(event: Event) {
         state.handle(event: event)
         middlewares.forEach { $0.middleware._handle(event: event, state: state) }
     }
     
-    func perform(eventCreator: EventEmitter) {
+    public func perform(eventCreator: EventEmitter) {
         if let event = eventCreator(state, self) {
             perform(event: event)
         }
