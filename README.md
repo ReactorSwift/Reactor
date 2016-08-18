@@ -95,7 +95,7 @@ struct Update<T>: Event {
 }
 ```
 
-## Tying It Together with the Reactor
+## Tying it Together with the Reactor
 
 So, how does the state get events? Since the `Reactor` is responsible for all `State` changes, you can send events to the reactor which will in turn update the state by calling `handle(event: Event)` on the root state. You can create a shared global `Reactor` used by your entire application (my suggestion), or tediously pass the reference from object to object if you're a masochist.
 
@@ -138,7 +138,7 @@ By subscribing and subscribing in `viewDidAppear`/`viewDidDisappear` respectivel
 
 Sometimes you want to do something with an action besides just update application state. This is where `Middleware` comes into play. When you create a `Reactor`, along with the initial state, you may pass in an array of middleware. Each middleware gets called every time an action is passed in. Middleware is not allowed to mutate the state, but it does get a copy of the state along with the event. Middleware makes it easy to add things like logging, analytics, and error handling to an application.
 
-```
+```swift
 struct LoggingMiddleware: Middleware {
         func handle(event: Event, state: State) {
         switch event {
