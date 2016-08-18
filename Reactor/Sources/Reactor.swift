@@ -23,7 +23,7 @@ extension Middleware {
     }
 }
 
-struct Middlewares<S: State> {
+public struct Middlewares<S: State> {
     private(set) var middleware: AnyMiddleware
 }
 
@@ -31,7 +31,7 @@ public protocol AnySubscriber: class {
     func _update(with state: Any)
 }
 
-protocol Subscriber: AnySubscriber {
+public protocol Subscriber: AnySubscriber {
     associatedtype State
     func update(with state: State)
 }
