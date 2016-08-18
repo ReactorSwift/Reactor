@@ -10,6 +10,7 @@
 		AFE59AF31D6553C700B57DE2 /* Reactor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AFE59AE91D6553C700B57DE2 /* Reactor.framework */; };
 		AFE59AF81D6553C700B57DE2 /* ReactorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFE59AF71D6553C700B57DE2 /* ReactorTests.swift */; };
 		AFE59AFA1D6553C700B57DE2 /* Reactor.h in Headers */ = {isa = PBXBuildFile; fileRef = AFE59AEC1D6553C700B57DE2 /* Reactor.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		AFE59B051D65545A00B57DE2 /* Reactor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFE59B041D65545A00B57DE2 /* Reactor.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -29,6 +30,7 @@
 		AFE59AF21D6553C700B57DE2 /* ReactorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ReactorTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AFE59AF71D6553C700B57DE2 /* ReactorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactorTests.swift; sourceTree = "<group>"; };
 		AFE59AF91D6553C700B57DE2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AFE59B041D65545A00B57DE2 /* Reactor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Reactor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,6 +73,7 @@
 		AFE59AEB1D6553C700B57DE2 /* Reactor */ = {
 			isa = PBXGroup;
 			children = (
+				AFE59B031D65544900B57DE2 /* Sources */,
 				AFE59AEC1D6553C700B57DE2 /* Reactor.h */,
 				AFE59AED1D6553C700B57DE2 /* Info.plist */,
 			);
@@ -84,6 +87,14 @@
 				AFE59AF91D6553C700B57DE2 /* Info.plist */,
 			);
 			path = ReactorTests;
+			sourceTree = "<group>";
+		};
+		AFE59B031D65544900B57DE2 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				AFE59B041D65545A00B57DE2 /* Reactor.swift */,
+			);
+			path = Sources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -148,6 +159,7 @@
 				TargetAttributes = {
 					AFE59AE81D6553C700B57DE2 = {
 						CreatedOnToolsVersion = 8.0;
+						LastSwiftMigration = 0800;
 						ProvisioningStyle = Automatic;
 					};
 					AFE59AF11D6553C700B57DE2 = {
@@ -196,6 +208,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AFE59B051D65545A00B57DE2 /* Reactor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -320,6 +333,7 @@
 		AFE59AFE1D6553C700B57DE2 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -331,6 +345,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = me.jasonlarsen.Reactor;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
@@ -338,6 +353,7 @@
 		AFE59AFF1D6553C700B57DE2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -356,6 +372,7 @@
 		AFE59B011D6553C700B57DE2 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				INFOPLIST_FILE = ReactorTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = me.jasonlarsen.ReactorTests;
@@ -367,6 +384,7 @@
 		AFE59B021D6553C700B57DE2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				INFOPLIST_FILE = ReactorTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = me.jasonlarsen.ReactorTests;
