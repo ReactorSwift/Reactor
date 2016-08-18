@@ -87,7 +87,7 @@ struct LevelUp: Event {
 }
 ```
 
-For many actions, generics work very nicely.
+For many events, generics work very nicely.
 
 ```swift
 struct Update<T>: Event {
@@ -132,11 +132,11 @@ extension ViewController: Subscriber {
 }
 ```
 
-By subscribing and subscribing in `viewDidAppear`/`viewDidDisappear` respectively, we ensure that whenever this view controller is visible it is up to date with the latest application state. Upon initial subscription, the reactor will send the latest state to the subscriber's `update` function. Button presses send actions back to the reactor, which will then update the state and result in subsequent calls to `update`. (note: the Reactor always dispatches back to the main thread when it updates subscribers, so it is safe to perform UI updates in `update`.)
+By subscribing and subscribing in `viewDidAppear`/`viewDidDisappear` respectively, we ensure that whenever this view controller is visible it is up to date with the latest application state. Upon initial subscription, the reactor will send the latest state to the subscriber's `update` function. Button presses forward events back to the reactor, which will then update the state and result in subsequent calls to `update`. (note: the Reactor always dispatches back to the main thread when it updates subscribers, so it is safe to perform UI updates in `update`.)
 
 ## Middleware
 
-Sometimes you want to do something with an action besides just update application state. This is where `Middleware` comes into play. When you create a `Reactor`, along with the initial state, you may pass in an array of middleware. Each middleware gets called every time an action is passed in. Middleware is not allowed to mutate the state, but it does get a copy of the state along with the event. Middleware makes it easy to add things like logging, analytics, and error handling to an application.
+Sometimes you want to do something with an event besides just update application state. This is where `Middleware` comes into play. When you create a `Reactor`, along with the initial state, you may pass in an array of middleware. Each middleware gets called every time an event is passed in. Middleware is not allowed to mutate the state, but it does get a copy of the state along with the event. Middleware makes it easy to add things like logging, analytics, and error handling to an application.
 
 ```swift
 struct LoggingMiddleware: Middleware {
