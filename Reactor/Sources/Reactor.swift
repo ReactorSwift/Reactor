@@ -58,7 +58,7 @@ public class Reactor<S: State> {
      executed. An `EventEmitter` may also use its reactor reference to perform
      events at a later time, for example an async callback.
      */
-    typealias EventEmitter = (S, Reactor<S>) -> Event?
+    public typealias EventEmitter = (S, Reactor<S>) -> Event?
     
     // MARK: - Properties
     
