@@ -35,13 +35,13 @@ There are three main objects in the Reactor architecture:
 
 ## State
 
-State is anything that conforms to `StateType`. Here is an example:
+State is anything that conforms to `State`. Here is an example:
 
 ```swift
-struct Player: StateType {
+struct Player: State {
     var name: String
     var level: Int
-    
+
     mutating func handle(event: Event) {
         switch event {
         case let _ as LevelUp:
@@ -56,10 +56,10 @@ struct Player: StateType {
 Here we have a simple `Player` model, which is state in our application. Obviously most application states are more complicated than this, but this is where composition comes into play: we can create state by composing states.
 
 ```swift
-struct RPGState: StateType {
+struct RPGState: State {
     var player: Player
     var monsters: Monsters
-    
+
     mutating func handle(event: Event) {
         player.handle(event: event)
         monsters.handle(event: event)
@@ -110,16 +110,16 @@ class ViewController: UIViewController {
         super.viewDidAppear(animated)
         reactor.add(subscriber: self)
     }
-    
+
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         reactor.remove(subscriber: self)
     }
-    
+
     @IBAction func didPressDecrement() {
         reactor.perform(event: Decrement())
     }
-    
+
     @IBAction func didPressIncrement() {
         reactor.perform(event: Increment())
     }

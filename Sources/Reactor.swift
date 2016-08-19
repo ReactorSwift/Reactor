@@ -2,7 +2,7 @@ import Foundation
 
 public protocol Event {}
 
-public protocol StateType {
+public protocol State {
     mutating func handle(event: Event)
 }
 
@@ -23,7 +23,7 @@ extension Middleware {
     }
 }
 
-public struct Middlewares<State: StateType> {
+public struct Middlewares<ReactorState: State> {
     private(set) var middleware: AnyMiddleware
 }
 
@@ -44,13 +44,13 @@ extension Subscriber {
     }
 }
 
-public struct Subscription<State: StateType> {
+public struct Subscription<ReactorState: State> {
     private(set) weak var subscriber: AnySubscriber? = nil
-    let selector: ((State) -> Any)?
+    let selector: ((ReactorState) -> Any)?
 }
 
 
-public class Reactor<State: StateType> {
+public class Reactor<ReactorState: State> {
     
     /**
      An `EventEmitter` is a function that takes the state and a reference
@@ -58,17 +58,17 @@ public class Reactor<State: StateType> {
      executed. An `EventEmitter` may also use its reactor reference to perform
      events at a later time, for example an async callback.
      */
-    public typealias EventEmitter = (State, Reactor<State>) -> Event?
+    public typealias EventEmitter = (ReactorState, Reactor<ReactorState>) -> Event?
     
     // MARK: - Properties
     
-    private var subscriptions = [Subscription<State>]()
-    private var middlewares = [Middlewares<State>]()
+    private var subscriptions = [Subscription<ReactorState>]()
+    private var middlewares = [Middlewares<ReactorState>]()
     
     
     // MARK: - State
     
-    private (set) var state: State {
+    private (set) var state: ReactorState {
         didSet {
             subscriptions = subscriptions.filter { $0.subscriber != nil }
             DispatchQueue.main.async {
@@ -79,7 +79,7 @@ public class Reactor<State: StateType> {
         }
     }
     
-    public init(state: State, middlewares: [AnyMiddleware] = []) {
+    public init(state: ReactorState, middlewares: [AnyMiddleware] = []) {
         self.state = state
         self.middlewares = middlewares.map(Middlewares.init)
     }
@@ -87,7 +87,7 @@ public class Reactor<State: StateType> {
     
     // MARK: - Subscriptions
     
-    public func add(subscriber: AnySubscriber, selector: ((State) -> Any)? = nil) {
+    public func add(subscriber: AnySubscriber, selector: ((ReactorState) -> Any)? = nil) {
         guard !subscriptions.contains(where: {$0.subscriber === subscriber}) else { return }
         subscriptions.append(Subscription(subscriber: subscriber, selector: selector))
         subscriber._update(with: state)
