@@ -3,22 +3,22 @@ import Foundation
 public protocol Event {}
 
 public protocol State {
-    mutating func handle(event: Event)
+    mutating func react(to event: Event)
 }
 
 public protocol AnyMiddleware {
-    func _handle(event: Event, state: Any)
+    func _process(event: Event, state: Any)
 }
 
 public protocol Middleware: AnyMiddleware {
     associatedtype State
-    func handle(event: Event, state: State)
+    func process(event: Event, state: State)
 }
 
 extension Middleware {
-    public func _handle(event: Event, state: Any) {
+    public func _process(event: Event, state: Any) {
         if let state = state as? State {
-            handle(event: event, state: state)
+            process(event: event, state: state)
         }
     }
 }
@@ -100,8 +100,8 @@ public class Reactor<ReactorState: State> {
     // MARK: - Events
     
     public func perform(event: Event) {
-        state.handle(event: event)
-        middlewares.forEach { $0.middleware._handle(event: event, state: state) }
+        state.react(to: event)
+        middlewares.forEach { $0.middleware._process(event: event, state: state) }
     }
     
     public func perform(eventCreator: EventEmitter) {
