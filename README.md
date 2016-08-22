@@ -99,12 +99,12 @@ struct Update<T>: Event {
 
 So, how does the state get events? Since the `Reactor` is responsible for all `State` changes, you can send events to the reactor which will in turn update the state by calling `react(to event: Event)` on the root state. You can create a shared global `Reactor` used by your entire application (my suggestion), or tediously pass the reference from object to object if you're a masochist.
 
-Here is an example of a view controller with increment and decrement buttons and a label.
+Here is an example of a simple view controller with a label displaying our intrepid character's level, and a "Level Up" button.
 
 ```swift
-class ViewController: UIViewController {
+class PlayerViewController: UIViewController {
     var reactor = App.sharedReactor
-    @IBOutlet weak var numberLabel: UILabel!
+    @IBOutlet weak var levelLabel: UILabel!
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -116,18 +116,14 @@ class ViewController: UIViewController {
         reactor.remove(subscriber: self)
     }
 
-    @IBAction func didPressDecrement() {
-        reactor.perform(event: Decrement())
-    }
-
-    @IBAction func didPressIncrement() {
-        reactor.perform(event: Increment())
+    @IBAction func didPressLevelUp() {
+        reactor.perform(event: LevelUp())
     }
 }
 
 extension ViewController: Subscriber {
     func update(with state: State) {
-        numberLabel?.text = String(state.count)
+        levelLabel?.text = String(state.count)
     }
 }
 ```
@@ -142,10 +138,8 @@ Sometimes you want to do something with an event besides just update application
 struct LoggingMiddleware: Middleware {
     func process(event: Event, state: State) {
         switch event {
-        case _ as Increment:
-            print("Increment!")
-        case _ as Decrement:
-            print("Decrement!")
+        case _ as LevelUp:
+            print("Leveled Up!")
         default:
             break
         }
