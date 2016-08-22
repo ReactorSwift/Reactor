@@ -140,7 +140,7 @@ Sometimes you want to do something with an event besides just update application
 
 ```swift
 struct LoggingMiddleware: Middleware {
-        func process(event: Event, state: State) {
+    func process(event: Event, state: State) {
         switch event {
         case _ as Increment:
             print("Increment!")
