@@ -35,14 +35,14 @@ There are three main objects in the Reactor architecture:
 
 ## State
 
-State is anything that conforms to `StateType`. Here is an example:
+State is anything that conforms to `State`. Here is an example:
 
 ```swift
-struct Player: StateType {
+struct Player: State {
     var name: String
     var level: Int
-    
-    mutating func handle(event: Event) {
+
+    mutating func react(to event: Event) {
         switch event {
         case let _ as LevelUp:
             level += 1
@@ -56,18 +56,18 @@ struct Player: StateType {
 Here we have a simple `Player` model, which is state in our application. Obviously most application states are more complicated than this, but this is where composition comes into play: we can create state by composing states.
 
 ```swift
-struct RPGState: StateType {
+struct RPGState: State {
     var player: Player
     var monsters: Monsters
-    
-    mutating func handle(event: Event) {
-        player.handle(event: event)
-        monsters.handle(event: event)
+
+    mutating func react(to event: Event) {
+        player.react(to: event)
+        monsters.react(to: event)
     }
 }
 ```
 
-Parent states can handle events however they wish, although this will in most cases involve delegating to substates default behavior.
+Parent states can react to events however they wish, although this will in most cases involve delegating to substates default behavior.
 
 Side note: does the sight of `mutating` make you feel impure? Have no fear, [`mutating` semantics on value types](http://chris.eidhof.nl/post/structs-and-mutation-in-swift/) here are actualy very safe in Swift, and it gives us an imperative look and feel, with the safety of functional programming.
 
@@ -97,7 +97,7 @@ struct Update<T>: Event {
 
 ## Tying it Together with the Reactor
 
-So, how does the state get events? Since the `Reactor` is responsible for all `State` changes, you can send events to the reactor which will in turn update the state by calling `handle(event: Event)` on the root state. You can create a shared global `Reactor` used by your entire application (my suggestion), or tediously pass the reference from object to object if you're a masochist.
+So, how does the state get events? Since the `Reactor` is responsible for all `State` changes, you can send events to the reactor which will in turn update the state by calling `react(to event: Event)` on the root state. You can create a shared global `Reactor` used by your entire application (my suggestion), or tediously pass the reference from object to object if you're a masochist.
 
 Here is an example of a view controller with increment and decrement buttons and a label.
 
@@ -110,16 +110,16 @@ class ViewController: UIViewController {
         super.viewDidAppear(animated)
         reactor.add(subscriber: self)
     }
-    
+
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         reactor.remove(subscriber: self)
     }
-    
+
     @IBAction func didPressDecrement() {
         reactor.perform(event: Decrement())
     }
-    
+
     @IBAction func didPressIncrement() {
         reactor.perform(event: Increment())
     }
@@ -140,7 +140,7 @@ Sometimes you want to do something with an event besides just update application
 
 ```swift
 struct LoggingMiddleware: Middleware {
-        func handle(event: Event, state: State) {
+        func process(event: Event, state: State) {
         switch event {
         case _ as Increment:
             print("Increment!")
