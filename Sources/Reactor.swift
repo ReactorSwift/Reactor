@@ -73,12 +73,20 @@ public class Reactor<ReactorState: State> {
             subscriptions = subscriptions.filter { $0.subscriber != nil }
             DispatchQueue.main.async {
                 for subscription in self.subscriptions {
-                    subscription.subscriber?._update(with: self.state)
+                    self.publishStateChange(subscriber: subscription.subscriber, selector: subscription.selector)
                 }
             }
         }
     }
-    
+  
+    private func publishStateChange(subscriber: AnySubscriber?, selector: ((ReactorState) -> Any)?) {
+        if let selector = selector {
+            subscriber?._update(with: selector(self.state))
+        } else {
+            subscriber?._update(with: self.state)
+        }
+    }
+  
     public init(state: ReactorState, middlewares: [AnyMiddleware] = []) {
         self.state = state
         self.middlewares = middlewares.map(Middlewares.init)
@@ -90,7 +98,7 @@ public class Reactor<ReactorState: State> {
     public func add(subscriber: AnySubscriber, selector: ((ReactorState) -> Any)? = nil) {
         guard !subscriptions.contains(where: {$0.subscriber === subscriber}) else { return }
         subscriptions.append(Subscription(subscriber: subscriber, selector: selector))
-        subscriber._update(with: state)
+        publishStateChange(subscriber: subscriber, selector: selector)
     }
     
     public func remove(subscriber: AnySubscriber) {
