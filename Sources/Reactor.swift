@@ -106,7 +106,7 @@ public class Reactor<ReactorState: State> {
     
     public func fire(emitter: EventEmitter) {
         if let event = emitter(state, self) {
-            perform(event: event)
+            fire(event: event)
         }
     }
     
