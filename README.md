@@ -117,7 +117,7 @@ class PlayerViewController: UIViewController {
     }
 
     @IBAction func didPressLevelUp() {
-        reactor.perform(event: LevelUp())
+        reactor.fire(event: LevelUp())
     }
 }
 
