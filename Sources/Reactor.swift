@@ -99,12 +99,12 @@ public class Reactor<ReactorState: State> {
     
     // MARK: - Events
     
-    public func perform(event: Event) {
+    public func fire(event: Event) {
         state.react(to: event)
         middlewares.forEach { $0.middleware._process(event: event, state: state) }
     }
     
-    public func perform(emitter: EventEmitter) {
+    public func fire(emitter: EventEmitter) {
         if let event = emitter(state, self) {
             perform(event: event)
         }
