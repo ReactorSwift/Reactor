@@ -104,8 +104,8 @@ public class Reactor<ReactorState: State> {
         middlewares.forEach { $0.middleware._process(event: event, state: state) }
     }
     
-    public func perform(eventCreator: EventEmitter) {
-        if let event = eventCreator(state, self) {
+    public func perform(emitter: EventEmitter) {
+        if let event = emitter(state, self) {
             perform(event: event)
         }
     }
