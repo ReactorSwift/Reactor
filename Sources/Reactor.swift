@@ -1,23 +1,42 @@
 import Foundation
 
-public protocol Event {}
+
+
+// MARK: - State
 
 public protocol State {
     mutating func react(to event: Event)
 }
+
+
+// MARK: - Events
+
+public protocol Event {}
+
+
+// MARK: - Commands
+
+
+public protocol Command {
+    associatedtype StateType: State
+    func execute(state: StateType, reactor: Reactor<StateType>)
+}
+
+
+// MARK: - Middlewares
 
 public protocol AnyMiddleware {
     func _process(event: Event, state: Any)
 }
 
 public protocol Middleware: AnyMiddleware {
-    associatedtype State
-    func process(event: Event, state: State)
+    associatedtype StateType
+    func process(event: Event, state: StateType)
 }
 
 extension Middleware {
     public func _process(event: Event, state: Any) {
-        if let state = state as? State {
+        if let state = state as? StateType {
             process(event: event, state: state)
         }
     }
@@ -27,48 +46,40 @@ public struct Middlewares<ReactorState: State> {
     private(set) var middleware: AnyMiddleware
 }
 
+
+// MARK: - Subscribers
+
 public protocol AnySubscriber: class {
     func _update(with state: Any)
 }
 
 public protocol Subscriber: AnySubscriber {
-    associatedtype State
-    func update(with state: State)
+    associatedtype StateType
+    func update(with state: StateType)
 }
 
 extension Subscriber {
     public func _update(with state: Any) {
-        if let state = state as? State {
+        if let state = state as? StateType {
             update(with: state)
         }
     }
 }
 
-public struct Subscription<ReactorState: State> {
+public struct Subscription<StateType: State> {
     private(set) weak var subscriber: AnySubscriber? = nil
-    let selector: ((ReactorState) -> Any)?
+    let selector: ((StateType) -> Any)?
 }
 
 
-public class Reactor<ReactorState: State> {
+
+// MARK: - Reactor
+
+public class Reactor<StateType: State> {
     
-    /**
-     An `EventEmitter` is a function that takes the state and a reference
-     to the reactor and optionally returns an `Event` that will be immediately
-     executed. An `EventEmitter` may also use its reactor reference to perform
-     events at a later time, for example an async callback.
-     */
-    public typealias EventEmitter = (ReactorState, Reactor<ReactorState>) -> Event?
-    
-    // MARK: - Properties
-    
-    private var subscriptions = [Subscription<ReactorState>]()
-    private var middlewares = [Middlewares<ReactorState>]()
-    
-    
-    // MARK: - State
-    
-    private (set) var state: ReactorState {
+    private var subscriptions = [Subscription<StateType>]()
+    private var middlewares = [Middlewares<StateType>]()
+    private (set) var state: StateType {
         didSet {
             subscriptions = subscriptions.filter { $0.subscriber != nil }
             DispatchQueue.main.async {
@@ -79,15 +90,8 @@ public class Reactor<ReactorState: State> {
         }
     }
   
-    private func publishStateChange(subscriber: AnySubscriber?, selector: ((ReactorState) -> Any)?) {
-        if let selector = selector {
-            subscriber?._update(with: selector(self.state))
-        } else {
-            subscriber?._update(with: self.state)
-        }
-    }
   
-    public init(state: ReactorState, middlewares: [AnyMiddleware] = []) {
+    public init(state: StateType, middlewares: [AnyMiddleware] = []) {
         self.state = state
         self.middlewares = middlewares.map(Middlewares.init)
     }
@@ -95,7 +99,7 @@ public class Reactor<ReactorState: State> {
     
     // MARK: - Subscriptions
     
-    public func add(subscriber: AnySubscriber, selector: ((ReactorState) -> Any)? = nil) {
+    public func add(subscriber: AnySubscriber, selector: ((StateType) -> Any)? = nil) {
         guard !subscriptions.contains(where: {$0.subscriber === subscriber}) else { return }
         subscriptions.append(Subscription(subscriber: subscriber, selector: selector))
         publishStateChange(subscriber: subscriber, selector: selector)
@@ -105,6 +109,14 @@ public class Reactor<ReactorState: State> {
         subscriptions = subscriptions.filter { $0.subscriber !== subscriber }
     }
     
+    private func publishStateChange(subscriber: AnySubscriber?, selector: ((StateType) -> Any)?) {
+        if let selector = selector {
+            subscriber?._update(with: selector(self.state))
+        } else {
+            subscriber?._update(with: self.state)
+        }
+    }
+    
     // MARK: - Events
     
     public func fire(event: Event) {
@@ -112,10 +124,8 @@ public class Reactor<ReactorState: State> {
         middlewares.forEach { $0.middleware._process(event: event, state: state) }
     }
     
-    public func fire(emitter: EventEmitter) {
-        if let event = emitter(state, self) {
-            fire(event: event)
-        }
+    public func fire<C: Command>(command: C) where C.StateType == StateType {
+        command.execute(state: state, reactor: self)
     }
     
 }
