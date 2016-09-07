@@ -16,21 +16,10 @@ public protocol Event {}
 
 // MARK: - Commands
 
-public protocol AnyCommand {
-    func _execute(state: Any, reactor: Any)
-}
 
-public protocol Command: AnyCommand {
+public protocol Command {
     associatedtype S: State
     func execute(state: S, reactor: Reactor<S>)
-}
-
-extension Command {
-    func _execute(state: Any, reactor: Any) {
-        if let state = state as? S, let reactor = reactor as? Reactor<S> {
-            execute(state: state, reactor: reactor)
-        }
-    }
 }
 
 
@@ -135,8 +124,8 @@ public class Reactor<ReactorState: State> {
         middlewares.forEach { $0.middleware._process(event: event, state: state) }
     }
     
-    public func fire(command: AnyCommand) {
-        command._execute(state: state, reactor: self)
+    public func fire<C: Command>(command: C) where C.S == ReactorState {
+        command.execute(state: state, reactor: self)
     }
     
 }
