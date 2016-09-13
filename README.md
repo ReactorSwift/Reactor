@@ -2,7 +2,7 @@
 
 # Reactor
 
-Reactor is a framework for making more reactive applications inspired by [Elm](https://github.com/evancz/elm-architecture-tutorial), [Redux](http://redux.js.org/docs/basics/index.html), and recent work on [ReSwift](https://github.com/ReSwift/ReSwift). It's small and simple (just one file), so you can either use Carthage to stay up to date, or just drag and drop into your project and go.  Or you can look through it and roll your own. You'll need the latest Swift 3 to play.
+Reactor is a framework for making more reactive applications inspired by [Elm](https://github.com/evancz/elm-architecture-tutorial), [Redux](http://redux.js.org/docs/basics/index.html), and recent work on [ReSwift](https://github.com/ReSwift/ReSwift). It's small and simple (just one file), so you can either use Carthage to stay up to date, or just drag and drop into your project and go.  Or you can look through it and roll your own.
 
 Reactor encourages unidirectional data flow from a single source of truth—i.e., there is one global object responsible for managing application data, and all UI is derived and updated from it. This way your [UI is always in sync with your data](https://medium.com/swift-fox/react-native-native-28e37f7de1ae#.tbp9edrnn), and your data is sync with itself since there are not multiple copies of it floating around your app.
 
