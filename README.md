@@ -46,8 +46,8 @@ Reactor encourages unidirectional data flow from a single source of truth—i.e.
 There are six objects in the Reactor architecture:
 
 1. The `State` object - A struct with properties representing application data.
-1. The `Core` - Holds the application state.
-1. The `Event` - Can be fired by the core to trigger a state update.
+1. The `Event` - Can trigger a state update.
+1. The `Core` - Holds the application state and responsible for firing events.
 1. The `Subscriber` - Often a view controller, listens for state updates.
 1. The `Command` - A task that can asynchronously fire events. Useful for networking, working with databases, or any other asynchronous task.
 1. `Middleware` - Receives every event and corresponding state. Useful for analytics, error handling, and other side effects.
@@ -140,7 +140,7 @@ class PlayerViewController: UIViewController {
     }
 }
 
-extension ViewController: Subscriber {
+extension ViewController: Reactor.Subscriber {
     func update(with state: State) {
         levelLabel?.text = String(state.count)
     }
@@ -172,7 +172,7 @@ struct CreatePlayer: Command {
 core.fire(command: CreatePlayer(player: myNewPlayer))
 ```
 
-Commands get a copy of the current state, and a reference to the Core so they can fire Events as necessary.
+Commands get a copy of the current state, and a reference to the Core which allows them to fire Events as necessary.
 
 ## Middleware
 
@@ -190,5 +190,3 @@ struct LoggingMiddleware: Middleware {
     }
 }
 ```
-
-Obviously, in order to scale such middleware you would probably want to implement a way to encode/decode events, but at least you get an idea of what's possible
