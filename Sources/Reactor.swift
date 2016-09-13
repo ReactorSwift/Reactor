@@ -42,7 +42,7 @@ extension Middleware {
     }
 }
 
-public struct Middlewares<ReactorState: State> {
+public struct Middlewares<StateType: State> {
     private(set) var middleware: AnyMiddleware
 }
 
