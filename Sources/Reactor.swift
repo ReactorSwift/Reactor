@@ -1,7 +1,6 @@
 import Foundation
 
 
-
 // MARK: - State
 
 public protocol State {
