@@ -10,28 +10,47 @@ Reactor encourages unidirectional data flow from a single source of truth—i.e.
 ## Architecture
 
 ```
-┌──────────────────┐                                 ┌──────────────────┐
-│                  │                                 │                  │
-│                  │         ┌───────────┐           │                  │
-│                  │◀────────┤   Event   ├───────────┤                  │
+                                                     ┌──────────────────┐
+                                                     │                  │
+                                                     │                  │
+                                                     │     Command      │
+                                                 ┌───│     (Async)      │
+                                                 │   │                  │
+                                                 │   │                  │
+                                                 │   └──────────────────┘
+                                                 │
+┌──────────────────┐                             │   ┌──────────────────┐
+│                  │                             │   │                  │
+│                  │         ┌───────────┐       │   │                  │
+│                  │◀────────┤   Event   ├────◀──┴───┤                  │
 │                  │         └───────────┘           │                  │
 │                  │                                 │                  │
+│       Core       │                                 │    Subscriber    │
 │                  │                                 │                  │
-│     Reactor      │                                 │    Subscriber    │
 │                  │                                 │                  │
-│                  │         ┌───────────┐           │                  │
-│    ┌───────┐     ├─────────┤  update   ├──────────▶│                  │
-│    │ State │     │         └───────────┘           │                  │
-│    └───────┘     │                                 │                  │
-│                  │                                 │                  │
-└──────────────────┘                                 └──────────────────┘
+│    ┌───────┐     │         ┌───────────┐           │                  │
+│    │ State │     ├─────────┤   State   ├───────┬──▶│                  │
+│    └───────┘     │         └───────────┘       │   │                  │
+│                  │                             │   │                  │
+└──────────────────┘                             │   └──────────────────┘
+                                                 │
+                                                 │   ┌──────────────────┐
+                                                 │   │                  │
+                                                 │   │                  │
+                                                 └──▶│    Middleware    │
+                                                     │                  │
+                                                     │                  │
+                                                     └──────────────────┘
 ```
 
-There are three main objects in the Reactor architecture:
+There are six objects in the Reactor architecture:
 
-1. The application `State`
-2. The `Reactor`, which holds the application `State` and is the only object that can change it.
-3. The `Subscriber` (often a view controller), which listens and receives the updated `State` whenever
+1. The `State` object - A struct with properties representing application data.
+1. The `Event` - Can trigger a state update.
+1. The `Core` - Holds the application state and responsible for firing events.
+1. The `Subscriber` - Often a view controller, listens for state updates.
+1. The `Command` - A task that can asynchronously fire events. Useful for networking, working with databases, or any other asynchronous task.
+1. `Middleware` - Receives every event and corresponding state. Useful for analytics, error handling, and other side effects.
 
 ## State
 
@@ -95,69 +114,69 @@ struct Update<T>: Event {
 }
 ```
 
-## Tying it Together with the Reactor
+## Tying it Together with the Core
 
-So, how does the state get events? Since the `Reactor` is responsible for all `State` changes, you can send events to the reactor which will in turn update the state by calling `react(to event: Event)` on the root state. You can create a shared global `Reactor` used by your entire application (my suggestion), or tediously pass the reference from object to object if you're a masochist.
+So, how does the state get events? Since the `Core` is responsible for all `State` changes, you can send events to the core which will in turn update the state by calling `react(to event: Event)` on the root state. You can create a shared global `Core` used by your entire application (my suggestion), or tediously pass the reference from object to object if you're a masochist.
 
 Here is an example of a simple view controller with a label displaying our intrepid character's level, and a "Level Up" button.
 
 ```swift
 class PlayerViewController: UIViewController {
-    var reactor = App.sharedReactor
+    var core = App.sharedCore
     @IBOutlet weak var levelLabel: UILabel!
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        reactor.add(subscriber: self)
+        core.add(subscriber: self)
     }
 
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
-        reactor.remove(subscriber: self)
+        core.remove(subscriber: self)
     }
 
     @IBAction func didPressLevelUp() {
-        reactor.fire(event: LevelUp())
+        core.fire(event: LevelUp())
     }
 }
 
-extension ViewController: Subscriber {
+extension ViewController: Reactor.Subscriber {
     func update(with state: State) {
         levelLabel?.text = String(state.count)
     }
 }
 ```
 
-By subscribing and subscribing in `viewDidAppear`/`viewDidDisappear` respectively, we ensure that whenever this view controller is visible it is up to date with the latest application state. Upon initial subscription, the reactor will send the latest state to the subscriber's `update` function. Button presses forward events back to the reactor, which will then update the state and result in subsequent calls to `update`. (note: the Reactor always dispatches back to the main thread when it updates subscribers, so it is safe to perform UI updates in `update`.)
+By subscribing and subscribing in `viewDidAppear`/`viewDidDisappear` respectively, we ensure that whenever this view controller is visible it is up to date with the latest application state. Upon initial subscription, the core will send the latest state to the subscriber's `update` function. Button presses forward events back to the ore, which will then update the state and result in subsequent calls to `update`. (note: the `Core` always dispatches back to the main thread when it updates subscribers, so it is safe to perform UI updates in `update`.)
 
 ## Commands
 
-Sometimes you want to fire an `Event` at a later point, for example after a network request, database query, or other asynchronous operation. In these cases, `Command` helps you interact with the `Reactor` in a safe and consistent way.
+Sometimes you want to fire an `Event` at a later point, for example after a network request, database query, or other asynchronous operation. In these cases, `Command` helps you interact with the `Core` in a safe and consistent way.
 
 ```swift
 struct CreatePlayer: Command {
     var session = URLSession.shared
     var player: Player
 
-    func execute(state: RPGState, reactor: Reactor<RPGState>) {
+    func execute(state: RPGState, core: Core<RPGState>) {
         let task = session.dataTask(with: player.createRequest()) { data, response, error in
             // handle response appropriately
-            // then fire an update back to the reactor
-            reactor.fire(event: AddPlayer(player: player))
+            // then fire an update back to the Core
+            core.fire(event: AddPlayer(player: player))
         }
         task.resume()
     }
 }
 
 // to fire a command
-reactor.fire(command: CreatePlayer(player: myNewPlayer))
+core.fire(command: CreatePlayer(player: myNewPlayer))
 ```
 
-Commands get a copy of the current state, and a reference to the Reactor so they can fire Events as necessary.
+Commands get a copy of the current state, and a reference to the Core which allows them to fire Events as necessary.
 
 ## Middleware
 
-Sometimes you want to do something with an event besides just update application state. This is where `Middleware` comes into play. When you create a `Reactor`, along with the initial state, you may pass in an array of middleware. Each middleware gets called every time an event is passed in. Middleware is not allowed to mutate the state, but it does get a copy of the state along with the event. Middleware makes it easy to add things like logging, analytics, and error handling to an application.
+Sometimes you want to do something with an event besides just update application state. This is where `Middleware` comes into play. When you create a `Core`, along with the initial state, you may pass in an array of middleware. Each middleware gets called every time an event is passed in. Middleware is not allowed to mutate the state, but it does get a copy of the state along with the event. Middleware makes it easy to add things like logging, analytics, and error handling to an application.
 
 ```swift
 struct LoggingMiddleware: Middleware {
@@ -171,5 +190,3 @@ struct LoggingMiddleware: Middleware {
     }
 }
 ```
-
-Obviously, in order to scale such middleware you would probably want to implement a way to encode/decode events, but at least you get an idea of what's possible

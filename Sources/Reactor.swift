@@ -1,7 +1,6 @@
 import Foundation
 
 
-
 // MARK: - State
 
 public protocol State {
@@ -16,10 +15,9 @@ public protocol Event {}
 
 // MARK: - Commands
 
-
 public protocol Command {
     associatedtype StateType: State
-    func execute(state: StateType, reactor: Reactor<StateType>)
+    func execute(state: StateType, core: Core<StateType>)
 }
 
 
@@ -42,7 +40,7 @@ extension Middleware {
     }
 }
 
-public struct Middlewares<ReactorState: State> {
+public struct Middlewares<StateType: State> {
     private(set) var middleware: AnyMiddleware
 }
 
@@ -73,9 +71,9 @@ public struct Subscription<StateType: State> {
 
 
 
-// MARK: - Reactor
+// MARK: - Core
 
-public class Reactor<StateType: State> {
+public class Core<StateType: State> {
     
     private var subscriptions = [Subscription<StateType>]()
     private var middlewares = [Middlewares<StateType>]()
@@ -89,8 +87,7 @@ public class Reactor<StateType: State> {
             }
         }
     }
-  
-  
+    
     public init(state: StateType, middlewares: [AnyMiddleware] = []) {
         self.state = state
         self.middlewares = middlewares.map(Middlewares.init)
@@ -125,7 +122,7 @@ public class Reactor<StateType: State> {
     }
     
     public func fire<C: Command>(command: C) where C.StateType == StateType {
-        command.execute(state: state, reactor: self)
+        command.execute(state: state, core: self)
     }
     
 }
