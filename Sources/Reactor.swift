@@ -15,7 +15,6 @@ public protocol Event {}
 
 // MARK: - Commands
 
-
 public protocol Command {
     associatedtype StateType: State
     func execute(state: StateType, core: Core<StateType>)
