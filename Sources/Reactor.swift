@@ -77,7 +77,7 @@ public class Core<StateType: State> {
     
     private var subscriptions = [Subscription<StateType>]()
     private var middlewares = [Middlewares<StateType>]()
-    private (set) var state: StateType {
+    public private (set) var state: StateType {
         didSet {
             subscriptions = subscriptions.filter { $0.subscriber != nil }
             DispatchQueue.main.async {
