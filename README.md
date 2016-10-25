@@ -147,7 +147,7 @@ extension ViewController: Reactor.Subscriber {
 }
 ```
 
-By subscribing and subscribing in `viewDidAppear`/`viewDidDisappear` respectively, we ensure that whenever this view controller is visible it is up to date with the latest application state. Upon initial subscription, the core will send the latest state to the subscriber's `update` function. Button presses forward events back to the ore, which will then update the state and result in subsequent calls to `update`. (note: the `Core` always dispatches back to the main thread when it updates subscribers, so it is safe to perform UI updates in `update`.)
+By subscribing and subscribing in `viewDidAppear`/`viewDidDisappear` respectively, we ensure that whenever this view controller is visible it is up to date with the latest application state. Upon initial subscription, the core will send the latest state to the subscriber's `update` function. Button presses forward events back to the core, which will then update the state and result in subsequent calls to `update`. (note: the `Core` always dispatches back to the main thread when it updates subscribers, so it is safe to perform UI updates in `update`.)
 
 ## Commands
 
