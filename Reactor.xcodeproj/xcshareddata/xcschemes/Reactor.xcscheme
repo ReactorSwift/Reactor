@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0800"
+   LastUpgradeVersion = "9999"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "AFE59AE81D6553C700B57DE2"
+               BlueprintIdentifier = "OBJ_17"
                BuildableName = "Reactor.framework"
                BlueprintName = "Reactor"
                ReferencedContainer = "container:Reactor.xcodeproj">
@@ -32,22 +32,13 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "AFE59AF11D6553C700B57DE2"
+               BlueprintIdentifier = "OBJ_24"
                BuildableName = "ReactorTests.xctest"
                BlueprintName = "ReactorTests"
                ReferencedContainer = "container:Reactor.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "AFE59AE81D6553C700B57DE2"
-            BuildableName = "Reactor.framework"
-            BlueprintName = "Reactor"
-            ReferencedContainer = "container:Reactor.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
       <AdditionalOptions>
       </AdditionalOptions>
    </TestAction>
@@ -64,7 +55,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "AFE59AE81D6553C700B57DE2"
+            BlueprintIdentifier = "OBJ_17"
             BuildableName = "Reactor.framework"
             BlueprintName = "Reactor"
             ReferencedContainer = "container:Reactor.xcodeproj">
@@ -79,15 +70,6 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "AFE59AE81D6553C700B57DE2"
-            BuildableName = "Reactor.framework"
-            BlueprintName = "Reactor"
-            ReferencedContainer = "container:Reactor.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">
