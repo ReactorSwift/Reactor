@@ -190,3 +190,32 @@ struct LoggingMiddleware: Middleware {
     }
 }
 ```
+
+## Installation
+
+Follow the installation guides to integrate `Reactor`in your App.
+
+### Swift Package Manager
+
+To integrate `Reactor` in your App using [Swift Package Manager](https://swift.org/package-manager/), specify it in your `Package.swift` file:
+
+```
+import PackageDescription
+
+let package = Package(
+    [...]
+    dependencies: [
+        .Package(url: "https://github.com/jarsen/Reactor.git", majorVersion: XYZ)
+    ]
+)
+```
+
+### Carthage
+
+To integrate `Reactor` in your App using [Carthage](https://github.com/Carthage/Carthage), specify it in your `Cartfile`:
+
+```
+github "jarsen/Reactor" ~> X.Y.Z
+```
+
+Run `carthage update` to build the framework and drag the built Reactor.framework into your Xcode project.
