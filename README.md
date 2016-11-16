@@ -205,7 +205,7 @@ import PackageDescription
 let package = Package(
     [...]
     dependencies: [
-        .Package(url: "https://github.com/jarsen/Reactor.git", majorVersion: XYZ)
+        .Package(url: "https://github.com/reactor-swift/Reactor.git", majorVersion: XYZ)
     ]
 )
 ```
@@ -215,7 +215,7 @@ let package = Package(
 To integrate `Reactor` in your App using [Carthage](https://github.com/Carthage/Carthage), specify it in your `Cartfile`:
 
 ```
-github "jarsen/Reactor" ~> X.Y.Z
+github "reactor-swift/Reactor" ~> X.Y.Z
 ```
 
 Run `carthage update` to build the framework and drag the built Reactor.framework into your Xcode project.
