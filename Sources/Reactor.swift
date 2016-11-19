@@ -68,6 +68,16 @@ public struct Subscription<StateType: State> {
     private(set) weak var subscriber: AnySubscriber? = nil
     let selector: ((StateType) -> Any)?
     let notifyQueue: DispatchQueue
+
+    fileprivate func notify(with state: StateType) {
+        notifyQueue.async {
+            if let selector = self.selector {
+                self.subscriber?._update(with: selector(state))
+            } else {
+                self.subscriber?._update(with: state)
+            }
+        }
+    }
 }
 
 
@@ -97,8 +107,8 @@ public class Core<StateType: State> {
     public private (set) var state: StateType {
         didSet {
             subscriptions = subscriptions.filter { $0.subscriber != nil }
-            for subscription in self.subscriptions {
-                self.publishStateChange(subscriber: subscription.subscriber, selector: subscription.selector, notifyQueue: subscription.notifyQueue)
+            for subscription in subscriptions {
+                subscription.notify(with: state)
             }
         }
     }
@@ -114,24 +124,14 @@ public class Core<StateType: State> {
     public func add(subscriber: AnySubscriber, notifyOnQueue queue: DispatchQueue? = DispatchQueue.main, selector: ((StateType) -> Any)? = nil) {
         jobQueue.async {
             guard !self.subscriptions.contains(where: {$0.subscriber === subscriber}) else { return }
-            self.subscriptions.append(Subscription(subscriber: subscriber, selector: selector, notifyQueue: queue ?? self.jobQueue))
-            self.publishStateChange(subscriber: subscriber, selector: selector, notifyQueue: queue ?? self.jobQueue)
+            let subscription = Subscription(subscriber: subscriber, selector: selector, notifyQueue: queue ?? self.jobQueue)
+            self.subscriptions.append(subscription)
+            subscription.notify(with: self.state)
         }
     }
     
     public func remove(subscriber: AnySubscriber) {
         subscriptions = subscriptions.filter { $0.subscriber !== subscriber }
-    }
-    
-    private func publishStateChange(subscriber: AnySubscriber?, selector: ((StateType) -> Any)?, notifyQueue: DispatchQueue) {
-        let state = self.state
-        notifyQueue.async {
-            if let selector = selector {
-                subscriber?._update(with: selector(state))
-            } else {
-                subscriber?._update(with: state)
-            }
-        }
     }
     
     // MARK: - Events
