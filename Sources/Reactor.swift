@@ -67,6 +67,17 @@ extension Subscriber {
 public struct Subscription<StateType: State> {
     private(set) weak var subscriber: AnySubscriber? = nil
     let selector: ((StateType) -> Any)?
+    let notifyQueue: DispatchQueue
+
+    fileprivate func notify(with state: StateType) {
+        notifyQueue.async {
+            if let selector = self.selector {
+                self.subscriber?._update(with: selector(state))
+            } else {
+                self.subscriber?._update(with: state)
+            }
+        }
+    }
 }
 
 
@@ -75,15 +86,29 @@ public struct Subscription<StateType: State> {
 
 public class Core<StateType: State> {
     
-    private var subscriptions = [Subscription<StateType>]()
-    private var middlewares = [Middlewares<StateType>]()
+    private let jobQueue:DispatchQueue = DispatchQueue(label: "reactor.core.queue", qos: .userInitiated, attributes: [])
+
+    private let subscriptionsSyncQueue = DispatchQueue(label: "reactor.core.subscription.sync")
+    private var _subscriptions = [Subscription<StateType>]()
+    private var subscriptions: [Subscription<StateType>] {
+        get {
+            return subscriptionsSyncQueue.sync {
+                return self._subscriptions
+            }
+        }
+        set {
+            subscriptionsSyncQueue.sync {
+                self._subscriptions = newValue
+            }
+        }
+    }
+
+    private let middlewares: [Middlewares<StateType>]
     public private (set) var state: StateType {
         didSet {
             subscriptions = subscriptions.filter { $0.subscriber != nil }
-            DispatchQueue.main.async {
-                for subscription in self.subscriptions {
-                    self.publishStateChange(subscriber: subscription.subscriber, selector: subscription.selector)
-                }
+            for subscription in subscriptions {
+                subscription.notify(with: state)
             }
         }
     }
@@ -96,33 +121,33 @@ public class Core<StateType: State> {
     
     // MARK: - Subscriptions
     
-    public func add(subscriber: AnySubscriber, selector: ((StateType) -> Any)? = nil) {
-        guard !subscriptions.contains(where: {$0.subscriber === subscriber}) else { return }
-        subscriptions.append(Subscription(subscriber: subscriber, selector: selector))
-        publishStateChange(subscriber: subscriber, selector: selector)
+    public func add(subscriber: AnySubscriber, notifyOnQueue queue: DispatchQueue? = DispatchQueue.main, selector: ((StateType) -> Any)? = nil) {
+        jobQueue.async {
+            guard !self.subscriptions.contains(where: {$0.subscriber === subscriber}) else { return }
+            let subscription = Subscription(subscriber: subscriber, selector: selector, notifyQueue: queue ?? self.jobQueue)
+            self.subscriptions.append(subscription)
+            subscription.notify(with: self.state)
+        }
     }
     
     public func remove(subscriber: AnySubscriber) {
         subscriptions = subscriptions.filter { $0.subscriber !== subscriber }
     }
     
-    private func publishStateChange(subscriber: AnySubscriber?, selector: ((StateType) -> Any)?) {
-        if let selector = selector {
-            subscriber?._update(with: selector(self.state))
-        } else {
-            subscriber?._update(with: self.state)
-        }
-    }
-    
     // MARK: - Events
     
     public func fire(event: Event) {
-        state.react(to: event)
-        middlewares.forEach { $0.middleware._process(event: event, state: state) }
+        jobQueue.async {
+            self.state.react(to: event)
+            let state = self.state
+            self.middlewares.forEach { $0.middleware._process(event: event, state: state) }
+        }
     }
     
     public func fire<C: Command>(command: C) where C.StateType == StateType {
-        command.execute(state: state, core: self)
+        jobQueue.async {
+            command.execute(state: self.state, core: self)
+        }
     }
     
 }
