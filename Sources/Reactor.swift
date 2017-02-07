@@ -19,6 +19,7 @@ public protocol AnyCommand {
     func _execute(state: Any, core: Any)
     func _canExecute(state: Any) -> Bool
     var expiresAfter: TimeInterval { get }
+    func _didExpire(state: Any, core: Any)
 }
 
 extension AnyCommand {
@@ -29,6 +30,7 @@ public protocol Command: AnyCommand {
     associatedtype StateType: State
     func execute(state: StateType, core: Core<StateType>)
     func canExecute(state: StateType) -> Bool
+    func didExpire(state: StateType, core: Core<StateType>)
 }
 
 extension Command {
@@ -37,11 +39,21 @@ extension Command {
         return true
     }
 
+    public func didExpire(state: StateType, core: Core<StateType>) {
+        // do nothing by default
+    }
+
     public func _canExecute(state: Any) -> Bool {
         if let state = state as? StateType {
             return canExecute(state: state)
         } else {
             return false
+        }
+    }
+
+    public func _didExpire(state: Any, core: Any) {
+        if let state = state as? StateType, let core = core as? Core<StateType> {
+            didExpire(state: state, core: core)
         }
     }
 
@@ -122,7 +134,7 @@ public struct Subscription<StateType: State> {
 // MARK: - Core
 
 public class Core<StateType: State> {
-    
+
     private let jobQueue:DispatchQueue = DispatchQueue(label: "reactor.core.queue", qos: .userInitiated, attributes: [])
 
     private let internalSyncQueue = DispatchQueue(label: "reactor.core.internal.sync")
@@ -162,15 +174,15 @@ public class Core<StateType: State> {
             }
         }
     }
-    
+
     public init(state: StateType, middlewares: [AnyMiddleware] = []) {
         self.state = state
         self.middlewares = middlewares.map(Middlewares.init)
     }
-    
-    
+
+
     // MARK: - Subscriptions
-    
+
     public func add(subscriber: AnySubscriber, notifyOnQueue queue: DispatchQueue? = DispatchQueue.main, selector: ((StateType) -> Any)? = nil) {
         jobQueue.async {
             guard !self.subscriptions.contains(where: {$0.subscriber === subscriber}) else { return }
@@ -179,13 +191,13 @@ public class Core<StateType: State> {
             subscription.notify(with: self.state)
         }
     }
-    
+
     public func remove(subscriber: AnySubscriber) {
         subscriptions = subscriptions.filter { $0.subscriber !== subscriber }
     }
-    
+
     // MARK: - Events
-    
+
     public func fire(event: Event) {
         jobQueue.async {
             self.state.react(to: event)
@@ -197,11 +209,14 @@ public class Core<StateType: State> {
             }
             let now = Date()
             let expired = self.commands.enumerated().filter { $1.expiresAt < now }
-            expired.forEach { self.commands.remove(at: $0.offset) }
+            expired.forEach {
+                self.commands.remove(at: $0.offset)
+                $1.command._didExpire(state: state, core: self)
+            }
             self.middlewares.forEach { $0.middleware._process(event: event, state: state) }
         }
     }
-    
+
     public func fire<C: Command>(command: C) where C.StateType == StateType {
         if command.canExecute(state: state) {
             jobQueue.async {
@@ -211,5 +226,5 @@ public class Core<StateType: State> {
             commands.append(Commands(expiresAt: Date().addingTimeInterval(command.expiresAfter), command: command))
         }
     }
-    
+
 }
