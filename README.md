@@ -188,7 +188,7 @@ Commands get a copy of the current state, and a reference to the Core which allo
 
 ## Middleware
 
-Sometimes you want to do something with an event besides just update application state. This is where `Middleware` comes into play. When you create a `Core`, along with the initial state, you may pass in an array of middleware. Each middleware gets called every time an event is passed in. Middleware is not allowed to mutate the state, but it does get a copy of the state along with the event. Middleware makes it easy to add things like logging, analytics, and error handling to an application.
+Sometimes you want to do something with an event besides just update application state. This is where `Middleware` comes into play. When you create a `Core`, along with the initial state, you may pass in an array of middleware. Each middleware gets called every time an event is fired. Middleware cannot mutate the state, but it does get a copy of the state along with the event. Middleware makes it easy to add things like logging, analytics, and error handling to an application. It is great for monitoring event and state and triggering side effects (for example: looking for HTTP 401 errors and then presenting a login screen).
 
 ```swift
 struct LoggingMiddleware: Middleware {
