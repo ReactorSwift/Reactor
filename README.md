@@ -141,7 +141,7 @@ class PlayerViewController: UIViewController {
 }
 
 extension ViewController: Reactor.Subscriber {
-    func update(with state: State) {
+    func update(with state: RPGState) {
         levelLabel?.text = String(state.count)
     }
 }
