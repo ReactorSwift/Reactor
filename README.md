@@ -114,6 +114,20 @@ struct Update<T>: Event {
 }
 ```
 
+## Creating a Core
+
+In order to initialize your core, simply call the `Core`'s constructor and pass in your initial state and any middleware (discussed later in this readme). Personally, I like to make my core a shared instance and namespace it inside an enum.
+
+```swift
+enum App {
+  static let sharedCore = Core(state: RPGState(), middlewares: [
+        ReachabilityMiddleware(),
+        ErrorLogger(),
+        AnalyticsMiddleware(),
+        ])
+}
+```
+
 ## Tying it Together with the Core
 
 So, how does the state get events? Since the `Core` is responsible for all `State` changes, you can send events to the core which will in turn update the state by calling `react(to event: Event)` on the root state. You can create a shared global `Core` used by your entire application (my suggestion), or tediously pass the reference from object to object if you're a masochist.
