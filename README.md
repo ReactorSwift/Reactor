@@ -114,7 +114,7 @@ struct Update<T>: Event {
 }
 ```
 
-## Tying it Together with the Core
+## The Core
 
 So, how does the state get events? Since the `Core` is responsible for all `State` changes, you can send events to the core which will in turn update the state by calling `react(to event: Event)` on the root state. You can create a shared global `Core` used by your entire application (my suggestion), or tediously pass the reference from object to object if you're a masochist.
 
