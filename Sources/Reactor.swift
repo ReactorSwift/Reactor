@@ -15,9 +15,58 @@ public protocol Event {}
 
 // MARK: - Commands
 
-public protocol Command {
+public protocol AnyCommand {
+    func _execute(state: Any, core: Any)
+    func _canExecute(state: Any) -> Bool
+    var expiresAfter: TimeInterval { get }
+    func _didExpire(state: Any, core: Any)
+}
+
+extension AnyCommand {
+    var expiresAfter: TimeInterval { return 10.0 }
+}
+
+public protocol Command: AnyCommand {
     associatedtype StateType: State
     func execute(state: StateType, core: Core<StateType>)
+    func canExecute(state: StateType) -> Bool
+    func didExpire(state: StateType, core: Core<StateType>)
+}
+
+extension Command {
+
+    public func canExecute(state: StateType) -> Bool {
+        return true
+    }
+
+    public func didExpire(state: StateType, core: Core<StateType>) {
+        // do nothing by default
+    }
+
+    public func _canExecute(state: Any) -> Bool {
+        if let state = state as? StateType {
+            return canExecute(state: state)
+        } else {
+            return false
+        }
+    }
+
+    public func _didExpire(state: Any, core: Any) {
+        if let state = state as? StateType, let core = core as? Core<StateType> {
+            didExpire(state: state, core: core)
+        }
+    }
+
+    public func _execute(state: Any, core: Any) {
+        if let state = state as? StateType, let core = core as? Core<StateType> {
+            execute(state: state, core: core)
+        }
+    }
+}
+
+public struct Commands<StateType: State> {
+    private(set) var expiresAt: Date
+    private(set) var command: AnyCommand
 }
 
 
@@ -85,20 +134,33 @@ public struct Subscription<StateType: State> {
 // MARK: - Core
 
 public class Core<StateType: State> {
-    
+
     private let jobQueue:DispatchQueue = DispatchQueue(label: "reactor.core.queue", qos: .userInitiated, attributes: [])
 
-    private let subscriptionsSyncQueue = DispatchQueue(label: "reactor.core.subscription.sync")
+    private let internalSyncQueue = DispatchQueue(label: "reactor.core.internal.sync")
     private var _subscriptions = [Subscription<StateType>]()
     private var subscriptions: [Subscription<StateType>] {
         get {
-            return subscriptionsSyncQueue.sync {
+            return internalSyncQueue.sync {
                 return self._subscriptions
             }
         }
         set {
-            subscriptionsSyncQueue.sync {
+            internalSyncQueue.sync {
                 self._subscriptions = newValue
+            }
+        }
+    }
+    private var _commands = [Commands<StateType>]()
+    private var commands: [Commands<StateType>] {
+        get {
+            return internalSyncQueue.sync {
+                return self._commands
+            }
+        }
+        set {
+            internalSyncQueue.sync {
+                self._commands = newValue
             }
         }
     }
@@ -112,15 +174,15 @@ public class Core<StateType: State> {
             }
         }
     }
-    
+
     public init(state: StateType, middlewares: [AnyMiddleware] = []) {
         self.state = state
         self.middlewares = middlewares.map(Middlewares.init)
     }
-    
-    
+
+
     // MARK: - Subscriptions
-    
+
     public func add(subscriber: AnySubscriber, notifyOnQueue queue: DispatchQueue? = DispatchQueue.main, selector: ((StateType) -> Any)? = nil) {
         jobQueue.async {
             guard !self.subscriptions.contains(where: {$0.subscriber === subscriber}) else { return }
@@ -129,25 +191,40 @@ public class Core<StateType: State> {
             subscription.notify(with: self.state)
         }
     }
-    
+
     public func remove(subscriber: AnySubscriber) {
         subscriptions = subscriptions.filter { $0.subscriber !== subscriber }
     }
-    
+
     // MARK: - Events
-    
+
     public func fire(event: Event) {
         jobQueue.async {
             self.state.react(to: event)
             let state = self.state
+            let executable = self.commands.enumerated().filter { $1.command._canExecute(state: state) }
+            executable.forEach {
+                self.commands.remove(at: $0)
+                $1.command._execute(state: state, core: self)
+            }
+            let now = Date()
+            let expired = self.commands.enumerated().filter { $1.expiresAt < now }
+            expired.forEach {
+                self.commands.remove(at: $0.offset)
+                $1.command._didExpire(state: state, core: self)
+            }
             self.middlewares.forEach { $0.middleware._process(event: event, state: state) }
         }
     }
-    
+
     public func fire<C: Command>(command: C) where C.StateType == StateType {
-        jobQueue.async {
-            command.execute(state: self.state, core: self)
+        if command.canExecute(state: state) {
+            jobQueue.async {
+                command.execute(state: self.state, core: self)
+            }
+        } else {
+            commands.append(Commands(expiresAt: Date().addingTimeInterval(command.expiresAfter), command: command))
         }
     }
-    
+
 }
