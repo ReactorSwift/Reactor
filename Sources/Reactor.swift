@@ -86,7 +86,7 @@ public struct Subscription<StateType: State> {
 
 public class Core<StateType: State> {
     
-    private let jobQueue:DispatchQueue = DispatchQueue(label: "reactor.core.queue", qos: .userInitiated, attributes: [])
+    private let jobQueue:DispatchQueue
 
     private let subscriptionsSyncQueue = DispatchQueue(label: "reactor.core.subscription.sync")
     private var _subscriptions = [Subscription<StateType>]()
@@ -116,6 +116,11 @@ public class Core<StateType: State> {
     public init(state: StateType, middlewares: [AnyMiddleware] = []) {
         self.state = state
         self.middlewares = middlewares.map(Middlewares.init)
+        if #available(macOS 10.10, *) {
+            self.jobQueue = DispatchQueue(label: "reactor.core.queue", qos: .userInitiated, attributes: [])
+        } else {
+            self.jobQueue = DispatchQueue(label: "reactor.core.queue", qos: .unspecified, attributes: [])
+        }
     }
     
     

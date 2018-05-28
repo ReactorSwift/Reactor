@@ -1,5 +1,9 @@
 ![](Logo/Logo.png)
 
+[![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
+[![Swift Package Manager compatible](https://img.shields.io/badge/Swift%20Package%20Manager-compatible-brightgreen.svg)](https://github.com/apple/swift-package-manager)
+![macOS](https://img.shields.io/badge/macOS-10.9-lightgrey.svg)
+
 # Reactor
 
 Reactor is a framework for making more reactive applications inspired by [Elm](https://github.com/evancz/elm-architecture-tutorial), [Redux](http://redux.js.org/docs/basics/index.html), and recent work on [ReSwift](https://github.com/ReSwift/ReSwift). It's small and simple (just one file), so you can either use Carthage to stay up to date, or just drag and drop into your project and go.  Or you can look through it and roll your own.
