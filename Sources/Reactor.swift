@@ -70,12 +70,20 @@ public struct Subscription<StateType: State> {
     let notifyQueue: DispatchQueue
 
     fileprivate func notify(with state: StateType) {
-        notifyQueue.async {
-            if let selector = self.selector {
-                self.subscriber?._update(with: selector(state))
-            } else {
-                self.subscriber?._update(with: state)
+        if Thread.isMainThread {
+            finishNotify(with: state)
+        } else {
+            notifyQueue.async {
+                self.finishNotify(with: state)
             }
+        }
+    }
+    
+    fileprivate func finishNotify(with state: StateType) {
+        if let selector = self.selector {
+            self.subscriber?._update(with: selector(state))
+        } else {
+            self.subscriber?._update(with: state)
         }
     }
 }
@@ -122,12 +130,20 @@ public class Core<StateType: State> {
     // MARK: - Subscriptions
     
     public func add(subscriber: AnySubscriber, notifyOnQueue queue: DispatchQueue? = DispatchQueue.main, selector: ((StateType) -> Any)? = nil) {
-        jobQueue.async {
-            guard !self.subscriptions.contains(where: {$0.subscriber === subscriber}) else { return }
-            let subscription = Subscription(subscriber: subscriber, selector: selector, notifyQueue: queue ?? self.jobQueue)
-            self.subscriptions.append(subscription)
-            subscription.notify(with: self.state)
+        if Thread.isMainThread {
+            finishAdd(subscriber: subscriber, notifyQueue: queue, selector: selector)
+        } else {
+            jobQueue.async {
+                self.finishAdd(subscriber: subscriber, notifyQueue: queue, selector: selector)
+            }
         }
+    }
+    
+    private func finishAdd(subscriber: AnySubscriber, notifyQueue: DispatchQueue?, selector: ((StateType) -> Any)?) {
+        guard !subscriptions.contains(where: {$0.subscriber === subscriber}) else { return }
+        let subscription = Subscription(subscriber: subscriber, selector: selector, notifyQueue: notifyQueue ?? jobQueue)
+        subscriptions.append(subscription)
+        subscription.notify(with: state)
     }
     
     public func remove(subscriber: AnySubscriber) {
@@ -137,17 +153,33 @@ public class Core<StateType: State> {
     // MARK: - Events
     
     public func fire(event: Event) {
-        jobQueue.async {
-            self.state.react(to: event)
-            let state = self.state
-            self.middlewares.forEach { $0.middleware._process(event: event, state: state) }
+        if Thread.isMainThread {
+            finishFire(event: event)
+        } else {
+            jobQueue.async {
+                self.finishFire(event: event)
+            }
         }
     }
     
+    private func finishFire(event: Event) {
+        self.state.react(to: event)
+        let state = self.state
+        middlewares.forEach { $0.middleware._process(event: event, state: state) }
+    }
+    
     public func fire<C: Command>(command: C) where C.StateType == StateType {
-        jobQueue.async {
-            command.execute(state: self.state, core: self)
+        if Thread.isMainThread {
+            finishFire(command: command)
+        } else {
+            jobQueue.async {
+                self.finishFire(command: command)
+            }
         }
+    }
+    
+    private func finishFire<C: Command>(command: C) where C.StateType == StateType {
+        command.execute(state: state, core: self)
     }
     
 }
