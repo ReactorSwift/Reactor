@@ -86,28 +86,14 @@ public struct Subscription<StateType: State> {
 
 public class Core<StateType: State> {
     
-    private let jobQueue:DispatchQueue = DispatchQueue(label: "reactor.core.queue", qos: .userInitiated, attributes: [])
-
-    private let subscriptionsSyncQueue = DispatchQueue(label: "reactor.core.subscription.sync")
-    private var _subscriptions = [Subscription<StateType>]()
-    private var subscriptions: [Subscription<StateType>] {
-        get {
-            return subscriptionsSyncQueue.sync {
-                return self._subscriptions
-            }
-        }
-        set {
-            subscriptionsSyncQueue.sync {
-                self._subscriptions = newValue
-            }
-        }
-    }
+    private let jobQueue: DispatchQueue = DispatchQueue(label: "reactor.core.queue", qos: .userInitiated, attributes: [])
+    private var subscriptions = [Subscription<StateType>]()
 
     private let middlewares: [Middlewares<StateType>]
+
     public private (set) var state: StateType {
         didSet {
-            subscriptions = subscriptions.filter { $0.subscriber != nil }
-            for subscription in subscriptions {
+            for subscription in self.subscriptions {
                 subscription.notify(with: state)
             }
         }
@@ -124,6 +110,7 @@ public class Core<StateType: State> {
     public func add(subscriber: AnySubscriber, notifyOnQueue queue: DispatchQueue? = DispatchQueue.main, selector: ((StateType) -> Any)? = nil) {
         jobQueue.async {
             guard !self.subscriptions.contains(where: {$0.subscriber === subscriber}) else { return }
+            self.subscriptions = self.subscriptions.filter { $0.subscriber != nil }
             let subscription = Subscription(subscriber: subscriber, selector: selector, notifyQueue: queue ?? self.jobQueue)
             self.subscriptions.append(subscription)
             subscription.notify(with: self.state)
@@ -131,7 +118,10 @@ public class Core<StateType: State> {
     }
     
     public func remove(subscriber: AnySubscriber) {
-        subscriptions = subscriptions.filter { $0.subscriber !== subscriber }
+        // sync to limit `nil` subscribers by ensuring they're removed before they `deinit`.
+        jobQueue.sync {
+            subscriptions = subscriptions.filter { $0.subscriber !== subscriber && $0.subscriber != nil }
+        }
     }
     
     // MARK: - Events
@@ -139,8 +129,7 @@ public class Core<StateType: State> {
     public func fire(event: Event) {
         jobQueue.async {
             self.state.react(to: event)
-            let state = self.state
-            self.middlewares.forEach { $0.middleware._process(event: event, state: state) }
+            self.middlewares.forEach { $0.middleware._process(event: event, state: self.state) }
         }
     }
     
