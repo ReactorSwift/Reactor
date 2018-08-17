@@ -108,7 +108,7 @@ public class Core<StateType: State> {
     // MARK: - Subscriptions
     
     public func add(subscriber: AnySubscriber, notifyOnQueue queue: DispatchQueue? = DispatchQueue.main, selector: ((StateType) -> Any)? = nil) {
-        jobQueue.async {
+        jobQueue.sync {
             guard !self.subscriptions.contains(where: {$0.subscriber === subscriber}) else { return }
             self.subscriptions = self.subscriptions.filter { $0.subscriber != nil }
             let subscription = Subscription(subscriber: subscriber, selector: selector, notifyQueue: queue ?? self.jobQueue)
