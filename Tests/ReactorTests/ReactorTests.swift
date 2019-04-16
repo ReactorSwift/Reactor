@@ -19,7 +19,12 @@ class WhenReactorHasManyClients: XCTestCase {
         }
         let expected = expectation(for: predicate, evaluatedWith: NSObject())
 
-        let globalQueue = DispatchQueue.global()
+        let globalQueue: DispatchQueue
+        if #available(macOS 10.10, *) {
+            globalQueue = DispatchQueue.global()
+        } else {
+            globalQueue = DispatchQueue.global(priority: .default)
+        }
         globalQueue.async {
             DispatchQueue.concurrentPerform(iterations: subscribers.count) { index in
                 let subscriber = subscribers[index]
@@ -47,7 +52,12 @@ class WhenReactorHasManyClients: XCTestCase {
         }
         let expected = expectation(for: predicate, evaluatedWith: NSObject())
 
-        let globalQueue = DispatchQueue.global()
+        let globalQueue: DispatchQueue
+        if #available(macOS 10.10, *) {
+            globalQueue = DispatchQueue.global()
+        } else {
+            globalQueue = DispatchQueue.global(priority: .default)
+        }
         globalQueue.async {
             DispatchQueue.concurrentPerform(iterations: subscribers.count) { index in
                 let subscriber = subscribers[index]
