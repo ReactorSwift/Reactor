@@ -1,88 +1,63 @@
-# This `bitrise.yml` variant contains the default configuration to be used in
-# an iOS app repository. You can strip the comments in your `bitrise.yml` if
-# you want.
-#
-# Scripts in the following `bitrise.yml` file make use of the following
-# environment variables that should be set up as secret:
-#
-# Also, those scripts use the following environment variables that are declared
-# publicly in the following file:
-#
-# - `XCODEBUILD_PROJECT`: A path to a project or a workspace Xcode file.
-#
-# - `XCODEBUILD_SCHEME`: A name of the scheme to be built.
-#
-# - `XCODEBUILD_OPTIONS`: An additional build settings passed straight to each
-#   `xcodebuild` invocation.
-#
-
-# CLI metadata.
-#
-# This metadata is required to always be in `bitrise.yml`. The `format_version`
-# setting will be occasionally bumped.
-
-format_version: 1.3.1
-default_step_lib_source: https://github.com/ReactorSwift/Reactor.git
-
-# Workflow trigger map.
-#
-# The following trigger map triggers a build only for pull requests against
-# `develop` and `master` branches (from forks as well) and pushes to `develop`
-# and `master` branches.
-#
-# More on trigger maps: http://devcenter.bitrise.io/webhooks/trigger-map
-
+---
+format_version: '7'
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+project_type: macos
 trigger_map:
-
-  - push_branch: master
-    workflow: build-pull-request
-
-  - pull_request_target_branch: master
-    workflow: build-pull-request
-
-# Environment configuration.
-#
-# This list contains the default environment variables shared between workflows.
-
+- push_branch: "*"
+  workflow: primary
+- pull_request_source_branch: "*"
+  workflow: primary
+workflows:
+  deploy:
+    steps:
+    - activate-ssh-key@4.0.3:
+        run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
+    - git-clone@4.0.14: {}
+    - cache-pull@2.0.1: {}
+    - script@1.1.5:
+        title: Do anything with Script step
+    - certificate-and-profile-installer@1.10.1: {}
+    - recreate-user-schemes@1.0.2:
+        inputs:
+        - project_path: "$BITRISE_PROJECT_PATH"
+    - cocoapods-install@1.7.2: {}
+    - xcode-test-mac@1.2.1:
+        inputs:
+        - project_path: "$BITRISE_PROJECT_PATH"
+        - scheme: "$BITRISE_SCHEME"
+    - xcode-archive-mac@1.6.2:
+        inputs:
+        - project_path: "$BITRISE_PROJECT_PATH"
+        - scheme: "$BITRISE_SCHEME"
+        - export_method: "$BITRISE_EXPORT_METHOD"
+    - deploy-to-bitrise-io@1.3.19: {}
+    - cache-push@2.0.5: {}
+  primary:
+    steps:
+    - activate-ssh-key@4.0.3:
+        run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
+    - git-clone@4.0.14: {}
+    - cache-pull@2.0.1: {}
+    - script@1.1.5:
+        title: Do anything with Script step
+    - certificate-and-profile-installer@1.10.1: {}
+    - recreate-user-schemes@1.0.2:
+        inputs:
+        - project_path: "$BITRISE_PROJECT_PATH"
+    - xcode-test-mac@1.2.1:
+        inputs:
+        - project_path: "$BITRISE_PROJECT_PATH"
+        - scheme: "$BITRISE_SCHEME"
+    - deploy-to-bitrise-io@1.3.19: {}
+    - cache-push@2.0.5: {}
 app:
   envs:
-    - XCODEBUILD_PROJECT: ./Reactor.xcodeproj
-    - XCODEBUILD_OPTIONS: _BUILD_NUMBER=$BITRISE_BUILD_NUMBER
-
-# Workflow declarations.
-#
-# This list contains workflows used in the above trigger map.
-
-workflows:
-
-  build-pull-request:
-    envs:
-      - XCODEBUILD_SCHEME: Reactor
-    before_run:
-      - test-xcode
-
-  # Bootstrap code signing by installing certificates and provisioning profiles.
-
-  bootstrap-code-signing:
-    steps:
-      - certificate-and-profile-installer: {}
-
-  # Build and test an app using `xcodebuild` command.
-
-  test-xcode:
-    steps:
-      - xcode-test:
-          inputs:
-            - project_path: $XCODEBUILD_PROJECT
-            - scheme: $XCODEBUILD_SCHEME
-            - xcodebuild_test_options: $XCODEBUILD_OPTIONS
-
-  # Deploy build artifacts to bitrise.io.
-
-  deploy-bitriseio:
-    steps:
-      - deploy-to-bitrise-io:
-          inputs:
-            - notify_user_groups: none
-            - is_enable_public_page: false
-
+  - opts:
+      is_expand: false
+    BITRISE_PROJECT_PATH: "./Reactor.xcodeproj"
+  - opts:
+      is_expand: false
+    BITRISE_SCHEME: Reactor
+  - opts:
+      is_expand: false
+    BITRISE_EXPORT_METHOD: none
