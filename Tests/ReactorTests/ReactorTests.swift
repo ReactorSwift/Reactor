@@ -19,7 +19,12 @@ class WhenReactorHasManyClients: XCTestCase {
         }
         let expected = expectation(for: predicate, evaluatedWith: NSObject())
 
-        let globalQueue = DispatchQueue.global()
+        let globalQueue: DispatchQueue
+        if #available(macOS 10.10, *) {
+            globalQueue = DispatchQueue.global()
+        } else {
+            globalQueue = DispatchQueue.global(priority: .default)
+        }
         globalQueue.async {
             DispatchQueue.concurrentPerform(iterations: subscribers.count) { index in
                 let subscriber = subscribers[index]
@@ -30,7 +35,7 @@ class WhenReactorHasManyClients: XCTestCase {
             }
         }
 
-        wait(for: [expected], timeout: 5.0)
+        wait(for: [expected], timeout: 10.0)
         XCTAssertEqual(subscribers.count, subscribers.reduce(0, { $0 + ($1.received ? 1 : 0)}))
     }
 
@@ -47,7 +52,12 @@ class WhenReactorHasManyClients: XCTestCase {
         }
         let expected = expectation(for: predicate, evaluatedWith: NSObject())
 
-        let globalQueue = DispatchQueue.global()
+        let globalQueue: DispatchQueue
+        if #available(macOS 10.10, *) {
+            globalQueue = DispatchQueue.global()
+        } else {
+            globalQueue = DispatchQueue.global(priority: .default)
+        }
         globalQueue.async {
             DispatchQueue.concurrentPerform(iterations: subscribers.count) { index in
                 let subscriber = subscribers[index]
