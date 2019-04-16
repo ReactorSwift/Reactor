@@ -26,7 +26,7 @@
 		OBJ_12 /* ReactorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactorTests.swift; sourceTree = "<group>"; };
 		OBJ_13 /* Logo */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Logo; sourceTree = SOURCE_ROOT; };
 		OBJ_15 /* Reactor.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Reactor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		OBJ_16 /* ReactorTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = ReactorTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		OBJ_16 /* ReactorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = ReactorTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		OBJ_6 /* Package.swift */ = {isa = PBXFileReference; explicitFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		OBJ_9 /* Reactor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reactor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -146,7 +146,15 @@
 		OBJ_1 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 9999;
+				LastUpgradeCheck = 0900;
+				TargetAttributes = {
+					OBJ_17 = {
+						LastSwiftMigration = 1010;
+					};
+					OBJ_24 = {
+						LastSwiftMigration = 1010;
+					};
+				};
 			};
 			buildConfigurationList = OBJ_2 /* Build configuration list for PBXProject "Reactor" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -212,7 +220,7 @@
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "macosx iphoneos appletvos watchos appletvsimulator iphonesimulator watchsimulator";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = SWIFT_PACKAGE;
-				SWIFT_VERSION = 3.0;
+				SWIFT_VERSION = 4.2;
 				TARGET_NAME = Reactor;
 			};
 			name = Debug;
@@ -235,7 +243,7 @@
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "macosx iphoneos appletvos watchos appletvsimulator iphonesimulator watchsimulator";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = SWIFT_PACKAGE;
-				SWIFT_VERSION = 3.0;
+				SWIFT_VERSION = 4.2;
 				TARGET_NAME = Reactor;
 			};
 			name = Release;
@@ -252,7 +260,7 @@
 				OTHER_SWIFT_FLAGS = "$(inherited)";
 				SUPPORTED_PLATFORMS = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = SWIFT_PACKAGE;
-				SWIFT_VERSION = 3.0;
+				SWIFT_VERSION = 4.2;
 				TARGET_NAME = ReactorTests;
 			};
 			name = Debug;
@@ -269,7 +277,7 @@
 				OTHER_SWIFT_FLAGS = "$(inherited)";
 				SUPPORTED_PLATFORMS = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = SWIFT_PACKAGE;
-				SWIFT_VERSION = 3.0;
+				SWIFT_VERSION = 4.2;
 				TARGET_NAME = ReactorTests;
 			};
 			name = Release;
@@ -284,7 +292,7 @@
 				ENABLE_NS_ASSERTIONS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_SWIFT_FLAGS = "-DXcode";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -305,7 +313,7 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				GCC_OPTIMIZATION_LEVEL = s;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				OTHER_SWIFT_FLAGS = "-DXcode";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator appletvos appletvsimulator watchos watchsimulator";
