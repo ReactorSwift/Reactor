@@ -35,7 +35,7 @@ class WhenReactorHasManyClients: XCTestCase {
             }
         }
 
-        wait(for: [expected], timeout: 5.0)
+        wait(for: [expected], timeout: 10.0)
         XCTAssertEqual(subscribers.count, subscribers.reduce(0, { $0 + ($1.received ? 1 : 0)}))
     }
 
