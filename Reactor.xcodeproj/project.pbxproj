@@ -28,7 +28,7 @@
 		OBJ_15 /* Reactor.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Reactor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		OBJ_16 /* ReactorTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = ReactorTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		OBJ_6 /* Package.swift */ = {isa = PBXFileReference; explicitFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
-		OBJ_9 /* Reactor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reactor.swift; sourceTree = "<group>"; };
+		OBJ_9 /* Reactor.swift */ = {isa = PBXFileReference; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = Reactor.swift; sourceTree = "<group>"; tabWidth = 4; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */

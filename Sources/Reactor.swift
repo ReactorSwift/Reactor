@@ -41,6 +41,7 @@ extension Middleware {
 }
 
 public struct Middlewares<StateType: State> {
+    let id: UInt64
     private(set) var middleware: AnyMiddleware
 }
 
@@ -80,12 +81,30 @@ public struct Subscription<StateType: State> {
     }
 }
 
+extension String {
+    static func random(length: Int = 20) -> String {
+        let base = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        return String((0..<length).map{ _ in base.randomElement()! })
+    }
+}
 
+class Counter {
+    private var queue = DispatchQueue(label: String.random())
+    private (set) var value: UInt64 = 0
+
+    func increment() -> UInt64 {
+        queue.sync {
+            value += 1
+            return value
+        }
+    }
+}
 
 // MARK: - Core
 
 public class Core<StateType: State> {
     
+    private var middlewareCounter = Counter()
     private let jobQueue:DispatchQueue
 
     private let subscriptionsSyncQueue = DispatchQueue(label: "reactor.core.subscription.sync")
@@ -103,7 +122,7 @@ public class Core<StateType: State> {
         }
     }
 
-    private let middlewares: [Middlewares<StateType>]
+    private var middlewares: [Middlewares<StateType>]
     public private (set) var state: StateType {
         didSet {
             subscriptions = subscriptions.filter { $0.subscriber != nil }
@@ -115,7 +134,11 @@ public class Core<StateType: State> {
     
     public init(state: StateType, middlewares: [AnyMiddleware] = []) {
         self.state = state
-        self.middlewares = middlewares.map(Middlewares.init)
+        var tempMiddlewares = [Middlewares<StateType>]()
+        for m in middlewares {
+          tempMiddlewares.append(Middlewares(id: middlewareCounter.increment(), middleware: m))
+        }
+        self.middlewares = tempMiddlewares
         if #available(macOS 10.10, *) {
             self.jobQueue = DispatchQueue(label: "reactor.core.queue", qos: .userInitiated, attributes: [])
         } else {
@@ -153,6 +176,20 @@ public class Core<StateType: State> {
         jobQueue.async {
             command.execute(state: self.state, core: self)
         }
+    }
+  
+    public func observe(with middleware: AnyMiddleware) -> () -> () {
+      let wrapper = Middlewares<StateType>(id: middlewareCounter.increment(), middleware: middleware)
+      jobQueue.async {
+          self.middlewares.append(wrapper)
+      }
+      return {
+          self.jobQueue.sync {
+              if let index = self.middlewares.firstIndex(where: { $0.id == wrapper.id }) {
+                self.middlewares.remove(at: index)
+              }
+          }
+      }
     }
     
 }
