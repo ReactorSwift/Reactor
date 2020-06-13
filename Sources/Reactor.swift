@@ -93,10 +93,10 @@ class Counter {
     private (set) var value: UInt64 = 0
 
     func increment() -> UInt64 {
-        queue.sync {
+        return queue.sync(execute: { () -> UInt64 in
             value += 1
             return value
-        }
+        })
     }
 }
 
